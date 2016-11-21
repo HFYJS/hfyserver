@@ -231,33 +231,24 @@ void execute_cgi(int fd, const char *path, const char *method, const char *param
     {
         while ((len = readline(fd, buff, sizeof(buff))) > 0 && strcmp(buff, "\n"))
         {
-            printf("readline: %s\n", buff);
             buff[15] = '\0';
             if (!strcasecmp(buff, "Content-Length:"))
             {
                 content_length = atoi(&buff[16]);
-                printf("content-length: %d", content_length);
                 snprintf(env_length, sizeof(env_length), "CONTENT_LENGTH=%d", content_length);
                 putenv(env_length);
-                printf("content string: %s", env_length);
             }
         }
-        printf("end while\n");
     }
     else if (!strcasecmp(method, "GET"))
     {
         len = readline(fd, buff, sizeof(buff));
         while (len > 0 && strcmp(buff, "\n"))
-        {
-            printf("read: %s\n", buff);
             readline(fd, buff, sizeof(buff));
-        }
-        printf("end while get\n");
         
         snprintf(env_params, sizeof(env_params), "QUERY_STRING=%s", params);
         putenv(env_params);
     }
-    printf("after filter method\n");
     
     if (pipe(pipefd) < 0)
     {
@@ -279,7 +270,6 @@ void execute_cgi(int fd, const char *path, const char *method, const char *param
     
     if (pid == 0)
     {   //  child process
-        printf("child process\n");
         close(pipefd[1]);
         close(pipefd2[0]);
         
@@ -293,7 +283,6 @@ void execute_cgi(int fd, const char *path, const char *method, const char *param
     }
     else
     {   // father process
-        printf("father process\n");
         close(pipefd[0]);
         close(pipefd2[1]);
         
@@ -306,9 +295,8 @@ void execute_cgi(int fd, const char *path, const char *method, const char *param
             printf("has content\n");
             send(fd, &c, 1, 0);
         }
-        printf("before wait\n");
+        
         waitpid(pid, NULL, 0);
-        printf("after wait\n");
         close(pipefd[1]);
         close(pipefd2[0]);
     }
