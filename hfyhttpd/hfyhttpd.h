@@ -18,6 +18,7 @@
 #define BACKLOG 5   //  max server connections
 #define BUFFSIZE 1024   //  buff size to read or write
 #define METHODSIZE 32   //  method max size
+#define ENVSIZE 255 //  env max size
 
 //  log
 #define LOGSIZE 1024    //  Log's max size
@@ -31,11 +32,13 @@ int start(u_short *);
 void service_provider(void *);
 ssize_t readline(int, char *, size_t);
 void unimplemented(int);
-void notfound(int);
+void not_found(int);
 void execute_cgi(int, const char *, const char *, const char *);
 void handle_file(int, const char *);
 void header(int);
 void cat(int, FILE*);
+void bad_request(int);
+void execute_failed(int);
 
 //  wrapper functions
 int Socket(int, int, int);

@@ -27,8 +27,6 @@ int main(int argc, const char * argv[])
         
         Pthread_create(&threadid, NULL, (void *)service_provider, (void *)&clifd);
     }
-    
-    close(httpd);
 
     return 0;
 }

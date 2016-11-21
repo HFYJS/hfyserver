@@ -115,11 +115,11 @@ void service_provider(void *arg)
     printf("PATH: %s\n", path);
     if (stat(path, &st) < 0)
     {
-//        while (len > 0 && strcmp(buff, "\r\n")) {
+//        while (len > 0 && strcmp(buff, "\n")) {
 //            len = readline(clifd, buff, sizeof(buff));
 //            printf("DISCARD BUFF: len=%ld, content=%s", len, buff);
 //        }
-        notfound(clifd);
+        not_found(clifd);
     }
     else
     {
@@ -185,7 +185,7 @@ void unimplemented(int fd)
         err_quitthread("send");
 }
 
-void notfound(int fd)
+void not_found(int fd)
 {
     char buff[BUFFSIZE];
     
@@ -212,6 +212,106 @@ void notfound(int fd)
 void execute_cgi(int fd, const char *path, const char *method, const char *params)
 {
     printf("EXCUTE_CGI: path=%s\nmethod=%12s\nparams=%12s\n", path, method, params);
+    
+    ssize_t len;
+    char buff[BUFFSIZE];
+    int content_length = -1;
+    char env_length[ENVSIZE];
+    char env_method[ENVSIZE];
+    char env_params[ENVSIZE];
+    pid_t pid;
+    int pipefd[2];
+    int pipefd2[2];
+    char c;
+    
+    //  保存环境变量，并丢弃header
+    snprintf(env_method, sizeof(env_method), "REQUEST_METHOD=%s", method);
+    putenv(env_method);
+    if (!strcasecmp(method, "POST"))
+    {
+        while ((len = readline(fd, buff, sizeof(buff))) > 0 && strcmp(buff, "\n"))
+        {
+            printf("readline: %s\n", buff);
+            buff[15] = '\0';
+            if (!strcasecmp(buff, "Content-Length:"))
+            {
+                content_length = atoi(&buff[16]);
+                printf("content-length: %d", content_length);
+                snprintf(env_length, sizeof(env_length), "CONTENT_LENGTH=%d", content_length);
+                putenv(env_length);
+                printf("content string: %s", env_length);
+            }
+        }
+        printf("end while\n");
+    }
+    else if (!strcasecmp(method, "GET"))
+    {
+        len = readline(fd, buff, sizeof(buff));
+        while (len > 0 && strcmp(buff, "\n"))
+        {
+            printf("read: %s\n", buff);
+            readline(fd, buff, sizeof(buff));
+        }
+        printf("end while get\n");
+        
+        snprintf(env_params, sizeof(env_params), "QUERY_STRING=%s", params);
+        putenv(env_params);
+    }
+    printf("after filter method\n");
+    
+    if (pipe(pipefd) < 0)
+    {
+        execute_failed(fd);
+        err_quitthread("pipe");
+    }
+    
+    if (pipe(pipefd2) < 0)
+    {
+        execute_failed(fd);
+        err_quitthread("pipe");
+    }
+    
+    if ((pid = fork()) < 0)
+    {
+        execute_failed(fd);
+        err_quitthread("fork");
+    }
+    
+    if (pid == 0)
+    {   //  child process
+        printf("child process\n");
+        close(pipefd[1]);
+        close(pipefd2[0]);
+        
+        dup2(pipefd[0], STDIN_FILENO);
+        dup2(pipefd2[1], STDOUT_FILENO);
+        
+        execl(path, path, (char *)0);
+        
+        execute_failed(fd);
+        err_quitthread("execl");
+    }
+    else
+    {   // father process
+        printf("father process\n");
+        close(pipefd[0]);
+        close(pipefd2[1]);
+        
+        if (!strcasecmp(method, "POST"))
+            for (int i = 0; i < content_length; i++)
+                if (recv(fd, &c, 1, 0) == 1)
+                    write(pipefd[1], &c, 1);
+        
+        while (read(pipefd2[0], &c,1)) {
+            printf("has content\n");
+            send(fd, &c, 1, 0);
+        }
+        printf("before wait\n");
+        waitpid(pid, NULL, 0);
+        printf("after wait\n");
+        close(pipefd[1]);
+        close(pipefd2[0]);
+    }
 }
 
 void handle_file(int fd, const char *path)
@@ -221,7 +321,7 @@ void handle_file(int fd, const char *path)
     FILE *file;
     
     if ((file = fopen(path, "r")) == NULL) {
-        notfound(fd);
+        not_found(fd);
         
         err_quitthread("fopen");
     } else {
@@ -261,6 +361,52 @@ void cat(int fd, FILE *file)
         fclose(file);
         err_quitthread("fgets");
     }
+}
+
+void bad_request(int fd)
+{
+    char buff[BUFFSIZE];
+    
+    memset(buff, 0, sizeof(buff));
+    
+    STRCAT(buff, "HTTP/1.0 400 Bad Request\r\n");
+    
+    STRCAT(buff, "Content-Type: text/html\r\n");
+    STRCAT(buff, SERVER_STRING);
+    STRCAT(buff, "\r\n");
+    
+    STRCAT(buff, "<HTML>\r\n");
+    STRCAT(buff, "<HEAD><TITLE>Bad Request</TITLE></HEAD>\r\n");
+    STRCAT(buff, "<BODY>\r\n");
+    STRCAT(buff, "<P>Your browser sent a bad request, please check it, such as a post without \"Content-Length\".</P>\r\n");
+    STRCAT(buff, "</BODY>\r\n");
+    STRCAT(buff, "<HTML>\r\n");
+    
+    if (send(fd, buff, strlen(buff), 0) < 0)
+        err_quitthread("send");
+}
+
+void execute_failed(int fd)
+{
+    char buff[BUFFSIZE];
+    
+    memset(buff, 0, sizeof(buff));
+    
+    STRCAT(buff, "HTTP/1.0 500 Internal Server Error\r\n");
+    
+    STRCAT(buff, "Content-Type: text/html\r\n");
+    STRCAT(buff, SERVER_STRING);
+    STRCAT(buff, "\r\n");
+    
+    STRCAT(buff, "<HTML>\r\n");
+    STRCAT(buff, "<HEAD><TITLE>Internal Server Error</TITLE></HEAD>\r\n");
+    STRCAT(buff, "<BODY>\r\n");
+    STRCAT(buff, "<P>The Server occurred an error.</P>\r\n");
+    STRCAT(buff, "</BODY>\r\n");
+    STRCAT(buff, "</HTML>\r\n");
+    
+    if (send(fd, buff, strlen(buff), 0) < 0)
+        err_quitthread("send");
 }
 
 //  wrapper functions implementation
