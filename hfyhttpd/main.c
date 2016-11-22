@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <errno.h>
 #include "hfyhttpd.h"
 
 int main(int argc, const char * argv[])
@@ -22,9 +23,13 @@ int main(int argc, const char * argv[])
     
     httpd = start((u_short*)&servport);
     
-    while (1) {
-        clifd = Accept(httpd, (struct sockaddr *)&cliaddr, &cliaddrlen);
-        
+    for (; ;) {
+        clifd = accept(httpd, (struct sockaddr *)&cliaddr, &cliaddrlen);
+        if (clifd < 0)
+        {
+            perror("accept");
+            continue;
+        }
         Pthread_create(&threadid, NULL, (void *)service_provider, (void *)&clifd);
     }
 

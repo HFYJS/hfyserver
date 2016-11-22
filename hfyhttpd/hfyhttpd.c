@@ -17,12 +17,14 @@
 #include <ctype.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <errno.h>
 #include "hfyhttpd.h"
 
 int start(u_short *port)
 {
     int httpd = -1;
     struct sockaddr_in servaddr;
+    int opt_reuse = 1;
     
     //  1.socket
     httpd = Socket(AF_INET, SOCK_STREAM, 0);
@@ -32,6 +34,10 @@ int start(u_short *port)
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     servaddr.sin_port = htons(*port);
+    if (setsockopt(httpd, SOL_SOCKET, SO_REUSEADDR, &opt_reuse, sizeof(opt_reuse)) < 0) {
+        perror("setsockopt");
+        exit(1);
+    }
     Bind(httpd, (struct sockaddr*)&servaddr, sizeof(servaddr));
     if (!*port)
     {
@@ -226,7 +232,7 @@ void execute_cgi(int fd, const char *path, const char *method, const char *param
     
     //  保存环境变量，并丢弃header
     snprintf(env_method, sizeof(env_method), "REQUEST_METHOD=%s", method);
-    putenv(env_method);
+    printf("%d\n", putenv(env_method));
     if (!strcasecmp(method, "POST"))
     {
         while ((len = readline(fd, buff, sizeof(buff))) > 0 && strcmp(buff, "\n"))
@@ -291,10 +297,8 @@ void execute_cgi(int fd, const char *path, const char *method, const char *param
                 if (recv(fd, &c, 1, 0) == 1)
                     write(pipefd[1], &c, 1);
         
-        while (read(pipefd2[0], &c,1)) {
-            printf("has content\n");
+        while (read(pipefd2[0], &c,1))
             send(fd, &c, 1, 0);
-        }
         
         waitpid(pid, NULL, 0);
         close(pipefd[1]);
@@ -424,16 +428,6 @@ void Listen(int sockfd, int backlog)
 {
     if (listen(sockfd, backlog) < 0)
         err_quit("listen");
-}
-
-int Accept(int sockfd, struct sockaddr *sockaddr, socklen_t *addrlen)
-{
-    int clifd = -1;
-    
-    if ((clifd = accept(sockfd, sockaddr, addrlen)) < 0)
-        err_skip("accept");
-    
-    return clifd;
 }
 
 void Pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg)
