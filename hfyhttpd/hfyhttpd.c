@@ -34,6 +34,7 @@ int start(u_short *port)
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     servaddr.sin_port = htons(*port);
+    //  允许地址重用
     if (setsockopt(httpd, SOL_SOCKET, SO_REUSEADDR, &opt_reuse, sizeof(opt_reuse)) < 0) {
         perror("setsockopt");
         exit(1);
@@ -222,28 +223,19 @@ void execute_cgi(int fd, const char *path, const char *method, const char *param
     ssize_t len;
     char buff[BUFFSIZE];
     int content_length = -1;
-    char env_length[ENVSIZE];
-    char env_method[ENVSIZE];
-    char env_params[ENVSIZE];
     pid_t pid;
     int pipefd[2];
     int pipefd2[2];
     char c;
     
-    //  保存环境变量，并丢弃header
-    snprintf(env_method, sizeof(env_method), "REQUEST_METHOD=%s", method);
-    printf("%d\n", putenv(env_method));
+    //  获得Content-Length并丢弃header
     if (!strcasecmp(method, "POST"))
     {
         while ((len = readline(fd, buff, sizeof(buff))) > 0 && strcmp(buff, "\n"))
         {
             buff[15] = '\0';
             if (!strcasecmp(buff, "Content-Length:"))
-            {
                 content_length = atoi(&buff[16]);
-                snprintf(env_length, sizeof(env_length), "CONTENT_LENGTH=%d", content_length);
-                putenv(env_length);
-            }
         }
     }
     else if (!strcasecmp(method, "GET"))
@@ -251,9 +243,6 @@ void execute_cgi(int fd, const char *path, const char *method, const char *param
         len = readline(fd, buff, sizeof(buff));
         while (len > 0 && strcmp(buff, "\n"))
             readline(fd, buff, sizeof(buff));
-        
-        snprintf(env_params, sizeof(env_params), "QUERY_STRING=%s", params);
-        putenv(env_params);
     }
     
     if (pipe(pipefd) < 0)

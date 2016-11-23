@@ -27,7 +27,7 @@ int main(int argc, const char * argv[])
         clifd = accept(httpd, (struct sockaddr *)&cliaddr, &cliaddrlen);
         if (clifd < 0)
         {
-            //  子进程终止，父进程捕获到SIGCHLD信号并不处理，导致accept阻塞被中断(见UNP 5.9)
+            //  子进程终止，父进程捕获到SIGCHLD信号并不处理，导致系统调用accept被中断(见UNP 5.9)
             if (errno == EINTR)
                 continue;
             else
