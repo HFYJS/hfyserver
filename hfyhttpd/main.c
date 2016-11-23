@@ -27,8 +27,11 @@ int main(int argc, const char * argv[])
         clifd = accept(httpd, (struct sockaddr *)&cliaddr, &cliaddrlen);
         if (clifd < 0)
         {
-            perror("accept");
-            continue;
+            //  子进程终止，父进程捕获到SIGCHLD信号并不处理，导致accept阻塞被中断(见UNP 5.9)
+            if (errno == EINTR)
+                continue;
+            else
+                perror("accept");
         }
         Pthread_create(&threadid, NULL, (void *)service_provider, (void *)&clifd);
     }
