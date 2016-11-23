@@ -24,6 +24,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C75BDB251DE56387008BC95B /* todo */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = todo; sourceTree = "<group>"; };
 		C7CE81221DDACD6300510898 /* hfyhttpd */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = hfyhttpd; sourceTree = BUILT_PRODUCTS_DIR; };
 		C7CE81251DDACD6300510898 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		C7CE812F1DDACDE400510898 /* hfyhttpd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hfyhttpd.h; sourceTree = "<group>"; };
@@ -63,6 +64,7 @@
 				C7CE81251DDACD6300510898 /* main.c */,
 				C7CE812F1DDACDE400510898 /* hfyhttpd.h */,
 				C7CE81301DDACE4900510898 /* hfyhttpd.c */,
+				C75BDB251DE56387008BC95B /* todo */,
 			);
 			path = hfyhttpd;
 			sourceTree = "<group>";
@@ -252,6 +254,7 @@
 				C7CE812B1DDACD6300510898 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

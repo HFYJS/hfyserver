@@ -10,20 +10,24 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <errno.h>
+#include <arpa/inet.h>
+#include <pthread.h>
 #include "hfyhttpd.h"
 
 int main(int argc, const char * argv[])
 {
     int servport = HTTPD;
     int httpd = -1;
-    int clifd = -1;
-    struct sockaddr_in cliaddr;
-    socklen_t cliaddrlen = sizeof(cliaddr);
-    pthread_t threadid;
     
     httpd = start((u_short*)&servport);
     
     for (; ;) {
+        char cliip[16];
+        int clifd;
+        struct sockaddr_in cliaddr;
+        socklen_t cliaddrlen = sizeof(cliaddr);
+        pthread_t threadid;
+        
         clifd = accept(httpd, (struct sockaddr *)&cliaddr, &cliaddrlen);
         if (clifd < 0)
         {
@@ -33,7 +37,11 @@ int main(int argc, const char * argv[])
             else
                 perror("accept");
         }
+        inet_ntop(AF_INET, &cliaddr.sin_addr, cliip, sizeof(cliip));
+        printf("-------------------------------------\nclient connected:\nIP = %s\nCLIFD = %d\n", cliip, clifd);
         Pthread_create(&threadid, NULL, (void *)service_provider, (void *)&clifd);
+        //  释放线程资源
+        pthread_detach(threadid);
     }
 
     return 0;

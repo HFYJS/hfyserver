@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <errno.h>
+#include <arpa/inet.h>
 #include "hfyhttpd.h"
 
 int start(u_short *port)
@@ -56,6 +57,7 @@ int start(u_short *port)
 void service_provider(void *arg)
 {
     int clifd = *(int *)arg;
+    printf("hfy: service_provider%d\n", clifd);
     char buff[BUFFSIZE];
     ssize_t len = 0;
     char method[METHODSIZE];
@@ -67,11 +69,8 @@ void service_provider(void *arg)
     char path[BUFFSIZE];
     struct stat st;
     
-    hfylog("-------------------------------------\nHFYHTTPD: clifd %d connected", 1, clifd);
-    
     //  read a line
     len = readline(clifd, buff, sizeof(buff));
-    printf("FIRST LINE: %s", buff);
     
     //  get the method
     while (!ISSPACE(buff[i]) && (sizeof(method) - 1) > i && i < len)
@@ -80,7 +79,7 @@ void service_provider(void *arg)
         i++;
     }
     method[i] = '\0';
-    printf("METHOD: %s\n", method);
+    printf("METHOD = %s\n", method);
     
     //  if can't recognize the method, call unimplemented function
     if (strcasecmp(method, "GET") && strcasecmp(method, "POST"))
@@ -98,7 +97,7 @@ void service_provider(void *arg)
     while (!ISSPACE(buff[i]) && (sizeof(url) - 1) > i && i < len)
         url[j++] = buff[i++];
     url[j] = '\0';
-    printf("FULL URL: %s\n", url);
+    printf("URL = %s\n", url);
     
     //  handle the url
     if (!strcasecmp(method, "POST"))
@@ -114,20 +113,12 @@ void service_provider(void *arg)
             *query_string++ = '\0';
         }
     }
-    printf("QUERY STRING: %s\n", query_string);
     
     snprintf(path, sizeof(path), RES_PATH"%s", url);
     if (path[strlen(path) -1] == '/')
         STRCAT(path, "index.html");
-    printf("PATH: %s\n", path);
     if (stat(path, &st) < 0)
-    {
-//        while (len > 0 && strcmp(buff, "\n")) {
-//            len = readline(clifd, buff, sizeof(buff));
-//            printf("DISCARD BUFF: len=%ld, content=%s", len, buff);
-//        }
         not_found(clifd);
-    }
     else
     {
         if ((st.st_mode & S_IFMT) == S_IFDIR)
@@ -218,8 +209,6 @@ void not_found(int fd)
 
 void execute_cgi(int fd, const char *path, const char *method, const char *params)
 {
-    printf("EXCUTE_CGI: path=%s\nmethod=%12s\nparams=%12s\n", path, method, params);
-    
     ssize_t len;
     char buff[BUFFSIZE];
     int content_length = -1;
@@ -245,24 +234,22 @@ void execute_cgi(int fd, const char *path, const char *method, const char *param
             readline(fd, buff, sizeof(buff));
     }
     
+    //  利用管道与重定向完成父子进程间的通信
     if (pipe(pipefd) < 0)
     {
         execute_failed(fd);
         err_quitthread("pipe");
     }
-    
     if (pipe(pipefd2) < 0)
     {
         execute_failed(fd);
         err_quitthread("pipe");
     }
-    
     if ((pid = fork()) < 0)
     {
         execute_failed(fd);
         err_quitthread("fork");
     }
-    
     if (pid == 0)
     {   //  child process
         close(pipefd[1]);
@@ -297,8 +284,6 @@ void execute_cgi(int fd, const char *path, const char *method, const char *param
 
 void handle_file(int fd, const char *path)
 {
-    printf("HANDLE_FILE: path=%s\n", path);
-    
     FILE *file;
     
     if ((file = fopen(path, "r")) == NULL) {
