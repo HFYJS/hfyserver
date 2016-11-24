@@ -19,6 +19,7 @@
 #include <time.h>
 #include <errno.h>
 #include <arpa/inet.h>
+#include <sys/wait.h>
 #include "hfyhttpd.h"
 
 int start(u_short *port)
@@ -56,8 +57,14 @@ int start(u_short *port)
 
 void service_provider(void *arg)
 {
-    int clifd = *(int *)arg;
-    printf("hfy: service_provider%d\n", clifd);
+    // 获取client信息，包含ip, port, fd, threadid
+    struct clinfo *client = (struct clinfo *)arg;
+    int clifd = client -> cli_sockfd;
+    char *clip = client -> cli_ip;
+    unsigned short cliport = client -> cli_port;
+    pthread_t threadid = client -> cli_threadid; // 填充线程id
+    printf("-----------------------------------\na client has connected:ip=%s, port=%d, fd=%d\n", clip, cliport, clifd);
+    
     char buff[BUFFSIZE];
     ssize_t len = 0;
     char method[METHODSIZE];
@@ -132,6 +139,8 @@ void service_provider(void *arg)
     }
     
     close(clifd);
+    printf("thread exit\n");
+    pthread_exit(0);
 }
 
 ssize_t readline(int fd, char *buff, size_t buffsize)
@@ -209,6 +218,7 @@ void not_found(int fd)
 
 void execute_cgi(int fd, const char *path, const char *method, const char *params)
 {
+    printf("execute_cgi\n");
     ssize_t len;
     char buff[BUFFSIZE];
     int content_length = -1;
@@ -284,6 +294,7 @@ void execute_cgi(int fd, const char *path, const char *method, const char *param
 
 void handle_file(int fd, const char *path)
 {
+    printf("handle_file\n");
     FILE *file;
     
     if ((file = fopen(path, "r")) == NULL) {
@@ -375,6 +386,15 @@ void execute_failed(int fd)
         err_quitthread("send");
 }
 
+void sig_chld_handler(int signo)
+{
+    pid_t pid;
+    int stat;
+    
+    while ((pid = waitpid(-1, &stat, WNOHANG)) > 0)
+        printf("child process %d terminated, stat = %d\n", pid, stat);
+}
+
 //  wrapper functions implementation
 int Socket(int domain, int type, int protocal)
 {
@@ -453,4 +473,16 @@ void hfylog(const char *info, int count, ...)
     
     fputs(logstr, stderr);
     fputs("\n", stderr);
+}
+
+// client链表例程
+struct client_node *insert_client(struct client_node *current_client, struct clinfo *client)
+{
+    struct client_node *temp = (struct client_node *)malloc(sizeof(struct client_node));
+    temp -> client = client;
+    temp -> next = NULL;
+    
+    current_client -> next = temp;
+    
+    return temp;
 }

@@ -28,6 +28,20 @@
 #define ISSPACE(c) isspace((int)c)
 #define STRCAT(a, b) strcat(a, b)
 
+//  连接客户结构
+struct clinfo {
+    char cli_ip[16]; //  ip
+    unsigned short cli_port; //  port
+    int cli_sockfd; //  为该客户端分配的socket描述符
+    pthread_t cli_threadid; //   处理该客户连接的线程id
+};
+//  客户链表存储结构
+struct client_node {
+    struct clinfo *client;
+    struct client_node *next;
+};
+struct client_node *insert_client(struct client_node *, struct clinfo *);
+
 int start(u_short *);
 void service_provider(void *);
 ssize_t readline(int, char *, size_t);
@@ -39,6 +53,7 @@ void header(int);
 void cat(int, FILE*);
 void bad_request(int);
 void execute_failed(int);
+void sig_chld_handler(int);
 
 //  wrapper functions
 int Socket(int, int, int);

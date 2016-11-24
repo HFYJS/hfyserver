@@ -12,7 +12,14 @@
 #include <errno.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <signal.h>
+#include <sys/wait.h>
+#include <string.h>
+#include <stdlib.h>
 #include "hfyhttpd.h"
+
+struct client_node *clients = NULL;
+struct client_node *current_client = NULL;
 
 int main(int argc, const char * argv[])
 {
@@ -20,27 +27,41 @@ int main(int argc, const char * argv[])
     int httpd = -1;
     
     httpd = start((u_short*)&servport);
+    current_client = clients = (struct client_node *)malloc(sizeof(struct client_node));
     
+    // 捕获SIG_CHLD信号，处理僵死进程
+    signal(SIGCHLD, sig_chld_handler);
     for (; ;) {
-        char cliip[16];
         int clifd;
         struct sockaddr_in cliaddr;
         socklen_t cliaddrlen = sizeof(cliaddr);
         pthread_t threadid;
+        struct clinfo *client;
         
+        client = (struct clinfo *)malloc(sizeof(struct clinfo));
         clifd = accept(httpd, (struct sockaddr *)&cliaddr, &cliaddrlen);
         if (clifd < 0)
         {
-            //  子进程终止，父进程捕获到SIGCHLD信号并不处理，导致系统调用accept被中断(见UNP 5.9)
+            //  子进程终止，父进程捕获到SIGCHLD信号如果不处理，会导致系统调用accept被中断(见UNP 5.9)
             if (errno == EINTR)
                 continue;
             else
                 perror("accept");
         }
-        inet_ntop(AF_INET, &cliaddr.sin_addr, cliip, sizeof(cliip));
-        printf("-------------------------------------\nclient connected:\nIP = %s\nCLIFD = %d\n", cliip, clifd);
-        Pthread_create(&threadid, NULL, (void *)service_provider, (void *)&clifd);
-        //  释放线程资源
+        
+        // 填充client结构
+        inet_ntop(AF_INET, &cliaddr.sin_addr, client -> cli_ip, sizeof(client -> cli_ip)); // 填充ip
+        client -> cli_port = ntohs(cliaddr.sin_port); // 填充port
+        client -> cli_sockfd = clifd; // 填充sockfd
+        
+        Pthread_create(&threadid, NULL, (void *)service_provider, (void *)client);
+        
+        client -> cli_threadid = threadid; // 填充threadid
+        
+        // 保存已连接client到链表，便于管理
+        current_client = insert_client(current_client, client);
+        
+        //  设置线程为分离状态，线程结束后自动回收
         pthread_detach(threadid);
     }
 
