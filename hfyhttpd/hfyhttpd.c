@@ -62,8 +62,7 @@ void service_provider(void *arg)
     int clifd = client -> cli_sockfd;
     char *clip = client -> cli_ip;
     unsigned short cliport = client -> cli_port;
-    pthread_t threadid = client -> cli_threadid; // 填充线程id
-    printf("-----------------------------------\na client has connected:ip=%s, port=%d, fd=%d\n", clip, cliport, clifd);
+    printf("a client has connected:ip=%s, port=%d, fd=%d\n", clip, cliport, clifd);
     
     char buff[BUFFSIZE];
     ssize_t len = 0;
@@ -139,7 +138,6 @@ void service_provider(void *arg)
     }
     
     close(clifd);
-    printf("thread exit\n");
     pthread_exit(0);
 }
 
@@ -485,4 +483,41 @@ struct client_node *insert_client(struct client_node *current_client, struct cli
     current_client -> next = temp;
     
     return temp;
+}
+int get_client_count(struct client_node *header)
+{
+    int count = 0;
+    
+    while (header -> next != NULL)
+    {
+        count++;
+        header = header -> next;
+    }
+    
+    return count;
+}
+void list_client(struct client_node *header)
+{
+    int i = 0;
+    
+    while (header -> next != NULL)
+    {
+        i++;
+        header = header -> next;
+        printf("client %d: ip=%s, port=%d, fd=%d\n", i, header -> client -> cli_ip, header -> client -> cli_port, header -> client -> cli_sockfd);
+    }
+}
+void remove_client(struct client_node *current_client, struct clinfo *client)
+{
+    while (current_client -> next != NULL)
+    {
+        struct client_node *temp_client = current_client;
+        current_client = current_client -> next;
+        if (current_client -> client -> cli_threadid == client -> cli_threadid)
+        {
+            temp_client -> next = current_client -> next;
+            free(current_client);
+            free(client);
+        }
+    }
 }

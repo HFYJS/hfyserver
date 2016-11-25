@@ -49,6 +49,7 @@ int main(int argc, const char * argv[])
                 perror("accept");
         }
         
+        printf("------------------------------------------------\n");
         // 填充client结构
         inet_ntop(AF_INET, &cliaddr.sin_addr, client -> cli_ip, sizeof(client -> cli_ip)); // 填充ip
         client -> cli_port = ntohs(cliaddr.sin_port); // 填充port
@@ -60,6 +61,7 @@ int main(int argc, const char * argv[])
         
         // 保存已连接client到链表，便于管理
         current_client = insert_client(current_client, client);
+        printf("client num: %d\n", get_client_count(clients));
         
         //  设置线程为分离状态，线程结束后自动回收
         pthread_detach(threadid);

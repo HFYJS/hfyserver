@@ -40,7 +40,14 @@ struct client_node {
     struct clinfo *client;
     struct client_node *next;
 };
+//  插入客户信息
 struct client_node *insert_client(struct client_node *, struct clinfo *);
+//  计算客户链表大小
+int get_client_count(struct client_node *);
+//  遍历客户链表
+void list_client(struct client_node *);
+//  移除客户信息
+void remove_client(struct client_node *, struct clinfo *);
 
 int start(u_short *);
 void service_provider(void *);
