@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C7A0562F1DE9A1590072174F /* thread_pool.c in Sources */ = {isa = PBXBuildFile; fileRef = C7A0562E1DE9A1590072174F /* thread_pool.c */; };
 		C7CE81261DDACD6300510898 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = C7CE81251DDACD6300510898 /* main.c */; };
 		C7CE81311DDACE4900510898 /* hfyhttpd.c in Sources */ = {isa = PBXBuildFile; fileRef = C7CE81301DDACE4900510898 /* hfyhttpd.c */; };
 /* End PBXBuildFile section */
@@ -25,6 +26,8 @@
 
 /* Begin PBXFileReference section */
 		C75BDB251DE56387008BC95B /* todo */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = todo; sourceTree = "<group>"; };
+		C7A0562D1DE99AA30072174F /* thread_pool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = thread_pool.h; sourceTree = "<group>"; };
+		C7A0562E1DE9A1590072174F /* thread_pool.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = thread_pool.c; sourceTree = "<group>"; };
 		C7CE81221DDACD6300510898 /* hfyhttpd */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = hfyhttpd; sourceTree = BUILT_PRODUCTS_DIR; };
 		C7CE81251DDACD6300510898 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		C7CE812F1DDACDE400510898 /* hfyhttpd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hfyhttpd.h; sourceTree = "<group>"; };
@@ -45,6 +48,8 @@
 		C7A0562C1DE96F380072174F /* thread_pool */ = {
 			isa = PBXGroup;
 			children = (
+				C7A0562D1DE99AA30072174F /* thread_pool.h */,
+				C7A0562E1DE9A1590072174F /* thread_pool.c */,
 			);
 			name = thread_pool;
 			sourceTree = "<group>";
@@ -134,6 +139,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C7A0562F1DE9A1590072174F /* thread_pool.c in Sources */,
 				C7CE81311DDACE4900510898 /* hfyhttpd.c in Sources */,
 				C7CE81261DDACD6300510898 /* main.c in Sources */,
 			);
