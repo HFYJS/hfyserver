@@ -42,6 +42,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C7A0562C1DE96F380072174F /* thread_pool */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = thread_pool;
+			sourceTree = "<group>";
+		};
 		C7CE81191DDACD6300510898 = {
 			isa = PBXGroup;
 			children = (
@@ -61,6 +68,7 @@
 		C7CE81241DDACD6300510898 /* hfyhttpd */ = {
 			isa = PBXGroup;
 			children = (
+				C7A0562C1DE96F380072174F /* thread_pool */,
 				C7CE81251DDACD6300510898 /* main.c */,
 				C7CE812F1DDACDE400510898 /* hfyhttpd.h */,
 				C7CE81301DDACE4900510898 /* hfyhttpd.c */,

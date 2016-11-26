@@ -175,7 +175,7 @@ void unimplemented(int fd)
     
     memset(buff, 0, sizeof(buff));
     
-    STRCAT(buff, "HTTP/1.0 501 Method Not Implemented\r\n");
+    STRCAT(buff, "HTTP/1.1 501 Method Not Implemented\r\n");
    
     STRCAT(buff, "Content-Type: text/html\r\n");
     STRCAT(buff, SERVER_STRING);
@@ -196,7 +196,7 @@ void not_found(int fd)
     
     memset(buff, 0, sizeof(buff));
     
-    STRCAT(buff, "HTTP/1.0 404 Not Found\r\n");
+    STRCAT(buff, "HTTP/1.1 404 Not Found\r\n");
     
     STRCAT(buff, "Content-Type: text/html\r\n");
     STRCAT(buff, SERVER_STRING);
@@ -313,7 +313,7 @@ void header(int fd)
     
     memset(buff, 0, sizeof(buff));
     
-    STRCAT(buff, "HTTP/1.0 200 OK\r\n");
+    STRCAT(buff, "HTTP/1.1 200 OK\r\n");
     
     STRCAT(buff, "Content-Type: text/html\r\n");
     STRCAT(buff, SERVER_STRING);
@@ -344,7 +344,7 @@ void bad_request(int fd)
     
     memset(buff, 0, sizeof(buff));
     
-    STRCAT(buff, "HTTP/1.0 400 Bad Request\r\n");
+    STRCAT(buff, "HTTP/1.1 400 Bad Request\r\n");
     
     STRCAT(buff, "Content-Type: text/html\r\n");
     STRCAT(buff, SERVER_STRING);
@@ -367,7 +367,7 @@ void execute_failed(int fd)
     
     memset(buff, 0, sizeof(buff));
     
-    STRCAT(buff, "HTTP/1.0 500 Internal Server Error\r\n");
+    STRCAT(buff, "HTTP/1.1 500 Internal Server Error\r\n");
     
     STRCAT(buff, "Content-Type: text/html\r\n");
     STRCAT(buff, SERVER_STRING);

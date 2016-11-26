@@ -12,7 +12,7 @@
 #define FONT_NONE "\033[0m"
 #define FONT_COLOR_RED "\033[0;31m"
 
-#define SERVER_STRING "SERVER: hfyhttpd/0.1.0\r\n"
+#define SERVER_STRING "SERVER: hfyhttpd/0.1.1\r\n"
 #define RES_PATH "/Users/hfy/HFY/hfyserver"
 #define HTTPD 8888  //  hfyhttpd port to listen
 #define BACKLOG 5   //  max server connections
