@@ -55,7 +55,7 @@ int start(u_short *port)
     return httpd;
 }
 
-void service_provider(void *arg)
+void *service_provider(void *arg)
 {
     // 获取client信息，包含ip, port, fd, threadid
     struct clinfo *client = (struct clinfo *)arg;
@@ -92,7 +92,7 @@ void service_provider(void *arg)
     {
         unimplemented(clifd);
         close(clifd);
-        return;
+        pthread_exit(NULL);
     }
     
     //  discard space
@@ -138,7 +138,7 @@ void service_provider(void *arg)
     }
     
     close(clifd);
-    pthread_exit(0);
+    pthread_exit(NULL);
 }
 
 ssize_t readline(int fd, char *buff, size_t buffsize)

@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "hfyhttpd.h"
+#include "thread_pool.h"
 
 struct client_node *clients = NULL;
 struct client_node *current_client = NULL;

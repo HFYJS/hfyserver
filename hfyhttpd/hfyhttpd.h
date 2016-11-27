@@ -50,7 +50,7 @@ void list_client(struct client_node *);
 void remove_client(struct client_node *, struct clinfo *);
 
 int start(u_short *);
-void service_provider(void *);
+void *service_provider(void *);
 ssize_t readline(int, char *, size_t);
 void unimplemented(int);
 void not_found(int);
