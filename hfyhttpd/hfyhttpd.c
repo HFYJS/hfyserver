@@ -59,6 +59,7 @@ void *service_provider(void *arg)
 {
     // 获取client信息，包含ip, port, fd, threadid
     struct clinfo *client = (struct clinfo *)arg;
+    client -> cli_threadid = pthread_self();
     int clifd = client -> cli_sockfd;
     char *clip = client -> cli_ip;
     unsigned short cliport = client -> cli_port;
@@ -92,7 +93,7 @@ void *service_provider(void *arg)
     {
         unimplemented(clifd);
         close(clifd);
-        pthread_exit(NULL);
+        return NULL;
     }
     
     //  discard space
@@ -138,7 +139,7 @@ void *service_provider(void *arg)
     }
     
     close(clifd);
-    pthread_exit(NULL);
+    return NULL;
 }
 
 ssize_t readline(int fd, char *buff, size_t buffsize)

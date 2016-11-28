@@ -27,6 +27,7 @@ int main(int argc, const char * argv[])
     int servport = HTTPD;
     int httpd = -1;
     
+    init_pool(MAX_THREAD_SIZE);
     httpd = start((u_short*)&servport);
     current_client = clients = (struct client_node *)malloc(sizeof(struct client_node));
     
@@ -36,7 +37,6 @@ int main(int argc, const char * argv[])
         int clifd;
         struct sockaddr_in cliaddr;
         socklen_t cliaddrlen = sizeof(cliaddr);
-        pthread_t threadid;
         struct clinfo *client;
         
         client = (struct clinfo *)malloc(sizeof(struct clinfo));
@@ -56,16 +56,11 @@ int main(int argc, const char * argv[])
         client -> cli_port = ntohs(cliaddr.sin_port); // 填充port
         client -> cli_sockfd = clifd; // 填充sockfd
         
-        Pthread_create(&threadid, NULL, (void *)service_provider, (void *)client);
-        
-        client -> cli_threadid = threadid; // 填充threadid
+        join_task(service_provider, (void *)client);
         
         // 保存已连接client到链表，便于管理
         current_client = insert_client(current_client, client);
         printf("client num: %d\n", get_client_count(clients));
-        
-        //  设置线程为分离状态，线程结束后自动回收
-        pthread_detach(threadid);
     }
 
     return 0;

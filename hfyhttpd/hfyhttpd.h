@@ -19,6 +19,7 @@
 #define BUFFSIZE 1024   //  buff size to read or write
 #define METHODSIZE 32   //  method max size
 #define ENVSIZE 255 //  env max size
+#define MAX_THREAD_SIZE 6 // 线程池大小
 
 //  log
 #define LOGSIZE 1024    //  Log's max size

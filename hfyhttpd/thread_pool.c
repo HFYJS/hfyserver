@@ -6,16 +6,24 @@
 //  Copyright © 2016 HFY. All rights reserved.
 //
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-
 #include "thread_pool.h"
 
 static Thread_pool *pool = NULL; // 全局线程池实例
 
 void init_pool(int thread_size)
 {
-    pool = (Thread_pool *)malloc(sizeof(Thread_pool *));
+    pool = (Thread_pool *)malloc(sizeof(Thread_pool));
+    
+    pthread_mutex_init(&(pool -> lock), NULL);
+    pthread_cond_init(&(pool -> cond), NULL);
+    
+    pool -> destroy = 0;
+    
+    pool -> task_header = NULL;
+    pool -> task_size = 0;
     
     pool -> max_thread_size = thread_size;
     pool -> threads = (pthread_t *)malloc(thread_size * sizeof(pthread_t));
@@ -23,14 +31,6 @@ void init_pool(int thread_size)
     {
         pthread_create(&(pool -> threads[i]), NULL, thread_routine, NULL);
     }
-    
-    pool -> task_header = NULL;
-    pool -> task_size = 0;
-    
-    pthread_mutex_init(&(pool -> lock), NULL);
-    pthread_cond_init(&(pool -> cond), NULL);
-    
-    pool -> destroy = 0;
 }
 
 void join_task(void *(*process)(void *), void *arg)
@@ -38,17 +38,16 @@ void join_task(void *(*process)(void *), void *arg)
     Task *new_task = (Task *)malloc(sizeof(Task));
     new_task -> process = process;
     new_task -> arg = arg;
+    new_task -> next = NULL;
     
     pthread_mutex_lock(&(pool -> lock));
     Task *current_task = pool -> task_header;
     if (current_task == NULL)
-        current_task = new_task;
+        pool -> task_header = new_task;
     else
     {
         while (current_task -> next != NULL)
-        {
             current_task = current_task -> next;
-        }
         current_task -> next = new_task;
     }
     pool -> task_size++;
@@ -98,18 +97,18 @@ void *thread_routine(void *arg)
             pthread_mutex_unlock(&(pool -> lock));
             pthread_exit(NULL);
         }
-        if (pool -> task_header == NULL)
+        while (!pool -> task_size)
             pthread_cond_wait(&(pool -> cond), &(pool -> lock));
-        else
-        {
-            Task *task = pool -> task_header;
-            pool -> task_header = task -> next;
-            pthread_mutex_unlock(&(pool -> lock));
-            
-            task -> process(task -> arg);
-            
-            free((void *)task);
-        }
+        
+        Task *task = pool -> task_header;
+        pool -> task_header = task -> next;
+        pool -> task_size--;
+        pthread_mutex_unlock(&(pool -> lock));
+        
+        (*(task -> process))(task -> arg);
+        
+        free((void *)task);
+        task = NULL;
     }
     return NULL;
 }
