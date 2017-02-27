@@ -21,7 +21,7 @@
 #define ENVSIZE 255
 #define MAX_THREAD_SIZE 6
 
-#define LOGSIZE 1024 
+#define LOGSIZE 1024
 #define LOG_ENABLE 1
 
 #define ISSPACE(c) isspace((int)c)
