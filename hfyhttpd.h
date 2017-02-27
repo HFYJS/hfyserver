@@ -6,48 +6,45 @@
 //  Copyright © 2016 HFY. All rights reserved.
 //
 
-#ifndef hfyhttpd_h
-#define hfyhttpd_h
+#ifndef _HFYHTTPD_H_
+#define _HFYHTTPD_H_
 
 #define FONT_NONE "\033[0m"
 #define FONT_COLOR_RED "\033[0;31m"
 
 #define SERVER_STRING "SERVER: hfyhttpd/0.1.1\r\n"
 #define RES_PATH "/Users/hfy/HFY/hfyserver"
-#define HTTPD 8888  //  hfyhttpd port to listen
-#define BACKLOG 5   //  max server connections
-#define BUFFSIZE 1024   //  buff size to read or write
-#define METHODSIZE 32   //  method max size
-#define ENVSIZE 255 //  env max size
-#define MAX_THREAD_SIZE 6 // 线程池大小
+#define HTTPD 8888
+#define BACKLOG 5
+#define BUFFSIZE 1024
+#define METHODSIZE 32
+#define ENVSIZE 255
+#define MAX_THREAD_SIZE 6
 
-//  log
-#define LOGSIZE 1024    //  Log's max size
-#define LOG_ENABLE 1    //  weather the log is usable
+#define LOGSIZE 1024 
+#define LOG_ENABLE 1
 
-//  functions
 #define ISSPACE(c) isspace((int)c)
 #define STRCAT(a, b) strcat(a, b)
 
-//  连接客户结构
 struct clinfo {
-    char cli_ip[16]; //  ip
-    unsigned short cli_port; //  port
-    int cli_sockfd; //  为该客户端分配的socket描述符
-    pthread_t cli_threadid; //   处理该客户连接的线程id
+    char cli_ip[16];
+    unsigned short cli_port;
+    int cli_sockfd;
+    pthread_t cli_threadid;
 };
-//  客户链表存储结构
+
 struct client_node {
     struct clinfo *client;
     struct client_node *next;
 };
-//  插入客户信息
+
 struct client_node *insert_client(struct client_node *, struct clinfo *);
-//  计算客户链表大小
+
 int get_client_count(struct client_node *);
-//  遍历客户链表
+
 void list_client(struct client_node *);
-//  移除客户信息
+
 void remove_client(struct client_node *, struct clinfo *);
 
 int start(u_short *);
@@ -70,12 +67,10 @@ void Getsockname(int, struct sockaddr *, socklen_t *);
 void Listen(int, int);
 void Pthread_create(pthread_t *, const pthread_attr_t *, void *(*)(void *), void *);
 
-//  error functions
 void err_quit(const char *);
 void err_quitthread(const char *);
 void err_skip(const char *);
 
-//  Log functions
 void hfylog(const char *, int, ...);
 
-#endif /* hfyhttpd_h */
+#endif /* _HFYHTTPD_H_ */
